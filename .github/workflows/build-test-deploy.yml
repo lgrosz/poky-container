@@ -15,6 +15,8 @@ on:
 jobs:
   build-test-deploy:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     strategy:
       fail-fast: false
       matrix:
@@ -44,12 +46,48 @@ jobs:
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout the repo
+        uses: actions/checkout@v3
 
-      # Build and test the images
-      - name: Run build-and-test.sh
-        run: ./build-and-test.sh
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Deploy the images
-      - name: Deploy
-        run: bash deploy.sh
+      - name: Log in to GitHub Packages
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image
+        uses: docker/build-push-action@v4
+        with:
+          push: false
+          build-args: |
+              BASE_REPO=${{ vars.base_repo }}
+              BASE_DISTRO=${{ matrix.base_distro }}
+          tags: |
+            ${{ vars.REPO }}:${{ matrix.base_distro }}
+            ghcr.io/${{ vars.REPO }}:${{ matrix.base_distro }}
+
+      - name: Run tests
+        run: |
+          if command -v annotate-output; then
+              ANNOTATE_OUTPUT=annotate-output
+          fi
+          $ANNOTATE_OUTPUT bash -c "cd tests; ./runtests.sh ${REPO}:${BASE_DISTRO}"
+
+      - name: Push container image
+        uses: docker/build-push-action@v4
+        with:
+          push: true
+          build-args: |
+              BASE_REPO=${{ vars.base_repo }}
+              BASE_DISTRO=${{ matrix.base_distro }}
+          tags: |
+            ${{ vars.REPO }}:${{ matrix.base_distro }}
+            ghcr.io/${{ vars.REPO }}:${{ matrix.base_distro }}
+
