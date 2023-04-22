@@ -21,7 +21,10 @@ if [ "${ENGINE_CMD}" = "" ]; then
     ENGINE_CMD="docker"
 fi
 
-${ENGINE_CMD} build --build-arg BASE_DISTRO=${BASE_DISTRO} --pull -t ${REPO}:${BASE_DISTRO} .
+${ENGINE_CMD} build \
+    --build-arg BASE_REPO=${BASE_REPO} \
+    --build-arg BASE_DISTRO=${BASE_DISTRO} \
+    --pull -t ${REPO}:${BASE_DISTRO} .
 
 if command -v annotate-output; then
     ANNOTATE_OUTPUT=annotate-output

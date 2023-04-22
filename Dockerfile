@@ -16,9 +16,10 @@
 # Since this Dockerfile is used in multiple images, force the builder to
 # specify the BASE_DISTRO. This should hopefully prevent accidentally using
 # a default, when another distro was desired.
-ARG BASE_DISTRO=SPECIFY_ME
+ARG BASE_DISTRO=ubuntu-20.04
+ARG BASE_REPO=crops/yocto
 
-FROM crops/yocto:$BASE_DISTRO-base
+FROM $BASE_REPO:$BASE_DISTRO-base
 
 USER root
 

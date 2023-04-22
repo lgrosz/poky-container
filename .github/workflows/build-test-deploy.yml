@@ -37,7 +37,8 @@ jobs:
         ]
     env:
       BASE_DISTRO: ${{ matrix.base_distro }}
-      REPO: crops/poky
+      BASE_REPO: ${{ vars.base_repo }}
+      REPO: ${{ vars.repo }}
       DEFAULT_DISTRO: ubuntu-18.04
       DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
       DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
