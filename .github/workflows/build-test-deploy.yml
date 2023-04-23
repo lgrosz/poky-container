@@ -21,21 +21,17 @@ jobs:
       fail-fast: false
       matrix:
         base_distro: [
-                      alma-8,
-                      alma-9,
-                      centos-7,
-                      debian-9,
-                      debian-10,
-                      debian-11,
-                      fedora-34,
-                      fedora-35,
-                      fedora-36,
-                      opensuse-15.2,
-                      opensuse-15.3,
-                      opensuse-15.4,
-                      ubuntu-18.04,
-                      ubuntu-20.04,
-                      ubuntu-22.04
+          centos-7,
+          debian-8,
+          debian-9,
+          debian-10,
+          fedora-28,
+          fedora-29,
+          fedora-30,
+          opensuse-15.1,
+          ubuntu-16.04,
+          ubuntu-18.04,
+          ubuntu-19.04
         ]
     env:
       BASE_DISTRO: ${{ matrix.base_distro }}
@@ -48,6 +44,11 @@ jobs:
     steps:
       - name: Checkout the repo
         uses: actions/checkout@v3
+
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=$(echo ${GITHUB_REF#refs/heads/})" >>$GITHUB_OUTPUT
+        id: extract_branch
 
       - name: Log in to Docker Hub
         uses: docker/login-action@v2
@@ -68,17 +69,19 @@ jobs:
           push: false
           build-args: |
               BASE_REPO=${{ vars.base_repo }}
-              BASE_DISTRO=${{ matrix.base_distro }}
+              BASE_DISTRO=${{ steps.extract_branch.outputs.branch }}-${{ matrix.base_distro }}
           tags: |
-            ${{ vars.REPO }}:${{ matrix.base_distro }}
-            ghcr.io/${{ vars.REPO }}:${{ matrix.base_distro }}
+            ${{ vars.REPO }}:${{ steps.extract_branch.outputs.branch }}-${{ matrix.base_distro }}
+            ghcr.io/${{ vars.REPO }}:${{ steps.extract_branch.outputs.branch }}-${{ matrix.base_distro }}
 
       - name: Run tests
+        env:
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}
         run: |
           if command -v annotate-output; then
               ANNOTATE_OUTPUT=annotate-output
           fi
-          $ANNOTATE_OUTPUT bash -c "cd tests; ./runtests.sh ${REPO}:${BASE_DISTRO}"
+          $ANNOTATE_OUTPUT bash -c "cd tests; ./runtests.sh ${REPO}:${BRANCH}-${BASE_DISTRO}"
 
       - name: Push container image
         uses: docker/build-push-action@v4
@@ -86,8 +89,8 @@ jobs:
           push: true
           build-args: |
               BASE_REPO=${{ vars.base_repo }}
-              BASE_DISTRO=${{ matrix.base_distro }}
+              BASE_DISTRO=${{ steps.extract_branch.outputs.branch }}-${{ matrix.base_distro }}
           tags: |
-            ${{ vars.REPO }}:${{ matrix.base_distro }}
-            ghcr.io/${{ vars.REPO }}:${{ matrix.base_distro }}
+            ${{ vars.REPO }}:${{ steps.extract_branch.outputs.branch }}-${{ matrix.base_distro }}
+            ghcr.io/${{ vars.REPO }}:${{ steps.extract_branch.outputs.branch }}-${{ matrix.base_distro }}
 

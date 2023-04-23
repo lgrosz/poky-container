@@ -27,7 +27,9 @@ failure () {
     exit -1
 }
 
-git clone --depth=1 git://git.yoctoproject.org/poky
+echo git clone --depth=1 --branch=$BRANCH git://git.yoctoproject.org/poky
+echo git clone --depth=1 --branch=${BRANCH} git://git.yoctoproject.org/poky
+git clone --depth=1 --branch=${BRANCH} git://git.yoctoproject.org/poky
 
 . ./poky/oe-init-build-env $BUILD_DIR
 

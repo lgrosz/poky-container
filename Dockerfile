@@ -53,4 +53,6 @@ RUN userdel -r yoctouser && \
 USER usersetup
 ENV LANG=en_US.UTF-8
 
+ENV BRANCH=zeus
+
 ENTRYPOINT ["/usr/bin/distro-entry.sh", "/usr/bin/dumb-init", "--", "/usr/bin/poky-entry.py"]
